@@ -139,7 +139,7 @@ async def main(agent_id: str):
     
     if lane_key in LANE_MAP:
         executor_class = LANE_MAP[lane_key]
-        executor = executor_class(agent_id, config, wallet)
+        executor = executor_class(agent_id, secrets, wallet)
     else:
         print(f"FATAL: Support for lane {config.lane} not yet implemented.", file=sys.stderr)
         sys.exit(1)

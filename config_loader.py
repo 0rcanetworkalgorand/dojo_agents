@@ -31,24 +31,21 @@ except binascii.Error as e:
 
 # --- LLM TIER MAPPING (GAP 1) ---
 LLM_TIER_MAP = {
-  "Standard": {
-    "model": "gpt-4o-mini",
-    "max_tokens": 2000,
-    "temperature": 0.3,
-    "cost_per_1k_tokens_usd": 0.00015
-  },
-  "Pro": {
-    "model": "gpt-4o",
-    "max_tokens": 4000,
-    "temperature": 0.3,
-    "cost_per_1k_tokens_usd": 0.005
-  },
-  "Elite": {
-    "model": "gpt-4o",
-    "max_tokens": 8000,
-    "temperature": 0.2,
-    "cost_per_1k_tokens_usd": 0.005
-  }
+    "Standard": {
+        "model": "gpt-4o-mini",
+        "max_tokens": 2000,
+        "temperature": 0.3
+    },
+    "Pro": {
+        "model": "gpt-4o",
+        "max_tokens": 4000,
+        "temperature": 0.3
+    },
+    "Elite": {
+        "model": "gpt-4o",
+        "max_tokens": 8000,
+        "temperature": 0.2
+    }
 }
 
 class ConfigVault:
@@ -83,7 +80,7 @@ class ConfigVault:
     def decrypt(self, encrypted_str: str) -> Dict[str, Any]:
         """Decrypts a base64 string back into dictionary data."""
         data = base64.b64decode(encrypted_str)
-        nonce = data[:12]
+        nonce = data[0:12]
         ciphertext = data[12:]
         plaintext = self.aesgcm.decrypt(nonce, ciphertext, None)
         return json.loads(plaintext.decode())
@@ -104,11 +101,14 @@ def load_agent_secrets(agent_id: str) -> Dict[str, Any]:
         
     decrypted_config = vault.decrypt(encrypted_config)
     
-    # Resolve LLM params based on tier (GAP 1)
-    tier = decrypted_config.get("llm_tier", "Standard")
+    # Resolve LLM params based on tier (llmTier)
+    tier = decrypted_config.get("llmTier", "Standard")
     if tier not in LLM_TIER_MAP:
-        raise ValueError(f"Unknown LLM tier in config: {tier}. "
-                         f"Must be one of: {list(LLM_TIER_MAP.keys())}")
+        raise ValueError(
+            f"Unknown llmTier '{tier}' in vault config for agent "
+            f"{decrypted_config.get('agent_address')}. "
+            f"Valid values: {list(LLM_TIER_MAP.keys())}"
+        )
     
     decrypted_config["llm_params"] = LLM_TIER_MAP[tier]
     return decrypted_config
