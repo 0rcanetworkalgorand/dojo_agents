@@ -32,9 +32,15 @@ class DataLane(BaseDataLane):
         api_key = self.get_openai_key()
 
         print(f"DataLane executor started for task {task.task_id}")
-        print(f"OpenAI API call made with model: {params['model']}")
+        print(f"API call made with model: {params['model']}")
 
-        client = OpenAI(api_key=api_key)
+        # Groq Cloud Support
+        base_url = None
+        if api_key.startswith("gsk_"):
+            base_url = "https://api.groq.com/openai/v1"
+            print("Using Groq Cloud API endpoint.")
+
+        client = OpenAI(api_key=api_key, base_url=base_url)
 
         response = client.chat.completions.create(
             model=params["model"],

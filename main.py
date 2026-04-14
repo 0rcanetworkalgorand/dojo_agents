@@ -105,6 +105,36 @@ async def lock_collateral_onchain(taskId: str, amount: int, agent_address: str, 
         print(f"ERROR: Failed to lock collateral: {e}")
         return False
 
+async def submit_task_onchain(taskId: str, provenanceHash: str | bytes, agent_address: str, signer: Any):
+    """Submit Vite AI provenance hash to EscrowVault."""
+    print(f"Submitting provenance hash for task {taskId}...")
+    algorand = AlgorandClient.testnet()
+    escrow = EscrowVaultClient(
+        algorand=algorand,
+        app_id=ESCROW_ID,
+        default_sender=agent_address,
+        default_signer=signer
+    )
+
+    try:
+        # Convert hex string to bytes if necessary
+        hash_bytes = provenanceHash if isinstance(provenanceHash, bytes) else bytes.fromhex(provenanceHash)
+        
+        escrow.send.submit_task(
+            args={
+                "task_id": taskId,
+                "kite_hash": hash_bytes
+            },
+            params=CommonAppCallParams(
+                box_references=[BoxReference(app_id=0, name=taskId.encode())]
+            )
+        )
+        print(f"Provenance hash submitted for task {taskId}.")
+        return True
+    except Exception as e:
+        print(f"ERROR: Failed to submit task: {e}")
+        return False
+
 async def main(agent_id: str):
     print(f"Agent {agent_id} initializing...")
 
@@ -188,6 +218,14 @@ async def main(agent_id: str):
                     result_payload = await executor.process_task(task_obj)
                     prov_hash = result_payload.provenance_hash
                     
+                    # --- ON-CHAIN ACTION: SUBMIT PROVENANCE HASH ---
+                    if prov_hash:
+                        submit_success = await submit_task_onchain(task_id, prov_hash, agent_address, signer)
+                        if not submit_success:
+                            print(json.dumps({"type": "TASK_FAILED", "taskId": task_id, "message": "On-chain hash submission failed"}))
+                            sys.stdout.flush()
+                            continue
+
                     # Signal Completion via stdout
                     print(json.dumps({
                         "type": "TASK_COMPLETE",
