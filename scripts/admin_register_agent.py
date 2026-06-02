@@ -30,7 +30,7 @@ def admin_register():
         return
 
     # 3. Initialize Registry Client as Admin
-    REGISTRY_ID = 758273132
+    REGISTRY_ID = 758815322
     registry = DojoRegistryClient(
         algorand=algorand,
         app_id=REGISTRY_ID,

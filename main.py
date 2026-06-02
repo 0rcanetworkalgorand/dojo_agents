@@ -34,8 +34,8 @@ LANE_MAP = {
 from config_loader import load_agent_secrets
 
 # Load Environment Fallbacks
-REGISTRY_ID = int(os.getenv("DOJO_REGISTRY_APP_ID", "758273132"))
-ESCROW_ID = int(os.getenv("ESCROW_VAULT_APP_ID", "758273134"))
+REGISTRY_ID = int(os.getenv("DOJO_REGISTRY_APP_ID", "758815322"))
+ESCROW_ID = int(os.getenv("ESCROW_VAULT_APP_ID", "761941677"))
 USDC_ID = int(os.getenv("USDC_ASSET_ID", "10458941"))
 ALGOD_URL = os.getenv("ALGOD_SERVER", "https://testnet-api.algonode.cloud")
 
