@@ -1,0 +1,61 @@
+name: Agents CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install py-algorand-sdk pytest pytest-timeout python-dotenv
+          pip install httpx cryptography algokit-utils
+
+      - name: Run lane validation tests
+        run: python -m pytest tests/test_lane_validation.py -v --timeout=30
+
+      - name: Run vault encryption tests
+        run: python -m pytest tests/test_vault.py -v --timeout=30
+
+      - name: Validate module syntax
+        run: |
+          python -c "
+          import ast
+          for f in ['main.py', 'config_loader.py', 'process_manager.py',
+                    'lanes/research.py', 'lanes/code.py', 'lanes/data.py', 'lanes/outreach.py']:
+              ast.parse(open(f).read())
+              print(f'✅ {f}')
+          "
+
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Run linter
+        run: ruff check . || true
