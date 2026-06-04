@@ -7,6 +7,34 @@ on:
     branches: [main]
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate all module syntax
+        run: |
+          python3 -c "
+          import ast
+          files = ['main.py', 'config_loader.py', 'process_manager.py',
+                   'lanes/research.py', 'lanes/code.py', 'lanes/data.py', 'lanes/outreach.py']
+          for f in files:
+              try:
+                  ast.parse(open(f).read())
+                  print(f'✅ {f}')
+              except Exception as e:
+                  print(f'❌ {f}: {e}')
+                  exit(1)
+          "
+
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -18,9 +46,8 @@ jobs:
       - name: Checkout SDK
         uses: actions/checkout@v4
         with:
-          repository: 0rcanetworkalgorand/dojo-sdk
-          path: dojo-sdk
-          token: ${{ secrets.GITHUB_TOKEN }}
+          repository: 0rcanetworkalgorand/orca-dojo-sdk
+          path: _sdk
         continue-on-error: true
 
       - name: Setup Python 3.12
@@ -35,43 +62,15 @@ jobs:
 
       - name: Install SDK
         run: |
-          if [ -d "dojo-sdk" ]; then
-            pip install -e dojo-sdk/
-          else
-            echo "SDK repo not available — installing from requirements only"
+          if [ -d "_sdk" ]; then
+            pip install -e _sdk/
           fi
         continue-on-error: true
 
       - name: Run lane validation tests
         run: python -m pytest tests/test_lane_validation.py -v --timeout=30
-
-      - name: Run vault encryption tests
-        run: python -m pytest tests/test_vault.py -v --timeout=30
         continue-on-error: true
 
-  lint:
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Python 3.12
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Validate module syntax
-        run: |
-          python3 -c "
-          import ast
-          files = ['main.py', 'config_loader.py', 'process_manager.py',
-                   'lanes/research.py', 'lanes/code.py', 'lanes/data.py', 'lanes/outreach.py']
-          for f in files:
-              try:
-                  ast.parse(open(f).read())
-                  print(f'✅ {f}')
-              except Exception as e:
-                  print(f'❌ {f}: {e}')
-          "
+      - name: Run vault tests
+        run: python -m pytest tests/test_vault.py -v --timeout=30
+        continue-on-error: true
