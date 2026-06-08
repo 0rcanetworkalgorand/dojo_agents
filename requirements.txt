@@ -3,5 +3,6 @@ pydantic>=2.0.0
 httpx>=0.24.0
 py-algorand-sdk>=2.0.0
 python-dotenv>=1.0.0
-# orca-dojo-sdk is expected to be installed via:
-# pip install -e ../dojo-sdk
+flask>=3.0.0
+gunicorn>=22.0.0
+orca-dojo-sdk @ git+https://github.com/0rcanetworkalgorand/dojo_sdk.git@main
